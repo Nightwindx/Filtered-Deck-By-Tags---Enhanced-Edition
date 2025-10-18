@@ -96,3 +96,7 @@ To understand what options to choose, I suggest reading the discussion on the an
 "defaultOrder": "9"
 }
 
+```
+## Notes
+- This add-on creates the filtered deck. It does not regularly rebuild that filtered deck. For that, I recommend one of the rebuild all add-ons.
+- Bug reports should be added to the issues page in the GitHub repository.
