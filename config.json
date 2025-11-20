@@ -3,5 +3,7 @@
   "shortNames": [],
   "supplementalSearchTexts": [],
   "unsuspendAutomatically": true,
-  "defaultOrder": "9"
+  "defaultOrder": "9",
+  "prependMainParentTagCaps": true,
+  "quickCreateAltClick": true
 }
