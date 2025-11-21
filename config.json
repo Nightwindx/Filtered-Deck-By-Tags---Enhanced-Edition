@@ -5,5 +5,6 @@
   "unsuspendAutomatically": true,
   "defaultOrder": "9",
   "prependMainParentTagCaps": true,
-  "quickCreateAltClick": true
+  "quickCreateAltClick": true,
+  "globalSearchSuffix": "(is:due OR is:new)"
 }
