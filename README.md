@@ -12,17 +12,20 @@ Enhanced and updated for current Anki versions (2.1.65 – 25.xx). It’s design
 
 ### 🪄 Usage
 
-1. Open the **Browser** in Anki.
-2. In the left **Tags** sidebar, either:
+Open the **Browser** in Anki.
 
-   * **Right-click** any tag → choose **“Create Filtered Deck”** (or one of your custom variants), *or*
-   * **Alt + Left-click** a tag to instantly create a filtered deck with the default settings and name (no dialog).
-3. When using the right-click option, you can edit the suggested deck name.
-4. A filtered (dynamic) deck is created from that tag with your configured:
+In the left **Tags** sidebar, either:
 
-   * card count
-   * sort / “select by” order
-   * card states (New, Learn, Due)
+* **Right-click** any tag → choose **“Create Filtered Deck”** (or one of your custom variants), or
+* **Alt + Left-click** a tag to instantly create a filtered deck with the default settings and name (no dialog).
+
+When using the right-click option, you can edit the suggested deck name.
+
+A filtered (dynamic) deck is created from that tag with your configured:
+
+* card count
+* sort / “select by” order
+* card states (New, Learn, Due), via a configurable global search suffix
 
 ---
 
@@ -47,6 +50,12 @@ Enhanced and updated for current Anki versions (2.1.65 – 25.xx). It’s design
   * Uses the same naming rules (including CAPS parent + “ – ” child if enabled).
   * Skips the name prompt for faster workflow.
   * Can be disabled in the config if you don’t want this behavior.
+
+* **🔎 Global Search Suffix for Card States (new)**
+  You can add a global suffix to every search, e.g.
+  `"(is:due OR is:new)"`
+  so that newly-created filtered decks automatically include only due + new cards by default.
+  This suffix is applied **after** the tag (and any per-menu supplemental search text).
 
 * **🧠 FSRS / Modern Orders Support**
   Works with all current **Select by** modes, including **Ascending Retrievability** and **Descending Retrievability**.
@@ -93,13 +102,20 @@ Access configuration via:
   [https://forums.ankiweb.net/t/improving-sort-orders/50081](https://forums.ankiweb.net/t/improving-sort-orders/50081)
 
 * **`prependMainParentTagCaps`** *(new)*
-  If `true`, the main parent tag (first component in the hierarchy) is prepended in ALL CAPS, separated by `" - "`.
+  If `true`, the main parent tag (first component in the hierarchy) is prepended in **ALL CAPS**, separated by `" - "`.
   Example: `Neurosurgery::3_brain_tumors` → **NEUROSURGERY – 3 Brain Tumors**.
   If `false`, only the leaf tag is used (e.g. **3 Brain Tumors**).
 
 * **`quickCreateAltClick`** *(new)*
   If `true`, **Alt + Left-click** on a tag in the browser sidebar will instantly create a filtered deck using the default settings and name (no confirmation dialog).
   If `false`, Alt-click does nothing and only the right-click menu is available.
+
+* **`globalSearchSuffix`** *(new)*
+  A string that is appended to **every** generated search, after the tag (and any `supplementalSearchTexts`).
+  Example:
+
+  * `"(is:due OR is:new)"` → only due and new cards are included by default.
+  * `""` (empty string) → no extra state filter; all matching cards are eligible.
 
 ---
 
@@ -113,7 +129,8 @@ Access configuration via:
   "unsuspendAutomatically": true,
   "defaultOrder": "9",
   "prependMainParentTagCaps": true,
-  "quickCreateAltClick": true
+  "quickCreateAltClick": true,
+  "globalSearchSuffix": ""
 }
 ```
 
@@ -137,9 +154,18 @@ Access configuration via:
   "unsuspendAutomatically": true,
   "defaultOrder": "9",
   "prependMainParentTagCaps": true,
-  "quickCreateAltClick": true
+  "quickCreateAltClick": true,
+  "globalSearchSuffix": "(is:due OR is:new)"
 }
 ```
+
+In this example, every filtered deck created by the add-on will end up with searches like:
+
+```text
+tag:neurosurgery::3\_brain\_tumors (is:due OR is:new)
+```
+
+unless overridden by manual edits.
 
 ---
 
