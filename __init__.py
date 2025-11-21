@@ -129,6 +129,28 @@ def _build_default_deck_name(item: SidebarItem) -> str:
 
     return defaultName
 
+def _build_search_for_item(item: SidebarItem, supplementalSearchText: str = "") -> str:
+    """
+    Build the full search string:
+    - tag:<full tag>
+    - optional per-menu supplemental search
+    - optional global suffix from config (e.g. '(is:due OR is:new)')
+    """
+    col = mw.col
+    base = col.build_search_string(SearchNode(tag=item.full_name))
+
+    parts = [base]
+
+    sst = (supplementalSearchText or "").strip()
+    if sst:
+        parts.append(sst)
+
+    global_suffix = (config.get("globalSearchSuffix", "") or "").strip()
+    if global_suffix:
+        parts.append(global_suffix)
+
+    return " ".join(parts)
+
 
 def _createFilteredDeck(item: SidebarItem, supplementalSearchText, shortName):
     """Standard creation (with name prompt)."""
@@ -140,8 +162,7 @@ def _createFilteredDeck(item: SidebarItem, supplementalSearchText, shortName):
     if col is None:
         raise Exception("collection is not available")
 
-    search = col.build_search_string(SearchNode(tag=item.full_name))
-    search += " " + supplementalSearchText
+    search = _build_search_for_item(item, supplementalSearchText)
 
     # Build default deck name and allow user to edit it
     defaultName = _build_default_deck_name(item)
@@ -167,9 +188,10 @@ def _createFilteredDeck_quick(item: SidebarItem):
     if col is None:
         raise Exception("collection is not available")
 
-    search = col.build_search_string(SearchNode(tag=item.full_name))
+    search = _build_search_for_item(item)
 
     deckName = _build_default_deck_name(item)
+
     _create_filtered_deck_core(col, deckName, search, item.name)
 
 
@@ -350,6 +372,11 @@ def updateLegacyConfig():
 
     if "quickCreateAltClick" not in updatedConfig:
         updatedConfig["quickCreateAltClick"] = True
+        
+    if "globalSearchSuffix" not in updatedConfig:
+        # e.g. "(is:due OR is:new)"
+        updatedConfig["globalSearchSuffix"] = ""
+
 
     return updatedConfig
 
