@@ -1,6 +1,7 @@
 from aqt import mw
 from aqt.qt import *
-from aqt.utils import tooltip, getText
+from aqt.utils import showText
+from aqt.utils import tooltip, getText, showInfo
 from anki.collection import SearchNode
 from aqt.browser import SidebarItem, SidebarTreeView, SidebarItemType
 from aqt.gui_hooks import browser_sidebar_will_show_context_menu
@@ -15,6 +16,8 @@ from anki.consts import (
     DYN_REVADDED,
     DYN_DUEPRIORITY,
 )
+CURRENT_VERSION = "21-11-2025"  # change this every time you ship a new version
+
 
 # Try to import retrievability sort constants if your Anki has them.
 try:
@@ -36,13 +39,10 @@ if TYPE_CHECKING:
 # ---------- Sidebar hook & context menu ----------
 
 
-def _filteredDeckFromTag(
-    sidebar: "SidebarTreeView", menu: QMenu, item: SidebarItem, index: QModelIndex
-):
-    # Make sure our quick-create handler is installed (Alt+Click)
+def _filteredDeckFromTag(sidebar, menu, item, index):
+    # Make sure quick-create is installed (harmless if already done)
     _ensure_quick_create(sidebar)
 
-    # Adds our option to the right click menu for tags in the browser
     if item.item_type == SidebarItemType.TAG:
         menu.addSeparator()
         if len(config["supplementalSearchTexts"]) == 0:
@@ -128,6 +128,7 @@ def _build_default_deck_name(item: SidebarItem) -> str:
             defaultName = f"{parent_caps} - {leaf_part}"
 
     return defaultName
+
 
 def _build_search_for_item(item: SidebarItem, supplementalSearchText: str = "") -> str:
     """
@@ -372,11 +373,10 @@ def updateLegacyConfig():
 
     if "quickCreateAltClick" not in updatedConfig:
         updatedConfig["quickCreateAltClick"] = True
-        
+
     if "globalSearchSuffix" not in updatedConfig:
         # e.g. "(is:due OR is:new)"
         updatedConfig["globalSearchSuffix"] = ""
-
 
     return updatedConfig
 
@@ -386,23 +386,56 @@ assert len(config["supplementalSearchTexts"]) == len(
     config["shortNames"]
 ), "Length of supplementalSearchTexts and shortNames are not the same in Filtered Deck From Tag addon configuration."
 
+
 def show_update_notice():
     cfg = mw.addonManager.getConfig(__name__)
+    last_seen = cfg.get("lastSeenVersion")
 
-    if not cfg.get("seenAltClickUpdateNotice", False):
-        tooltip(
-            "Filtered Deck From Tag updated!<br><br>"
-            "<b>New:</b><br>"
-            "• Alt+Click on a tag to instantly create a filtered deck<br>"
-            "• Parent tag can appear in CAPS (configurable)<br><br>"
-            "See add-on page for full details.",
-            period=10000,
-        )
-        cfg["seenAltClickUpdateNotice"] = True
-        mw.addonManager.writeConfig(__name__, cfg)
+    # Already showed message for this version
+    if last_seen == CURRENT_VERSION:
+        return
 
-# Run once per install/update
+    msg = f"""
+    <b>Filtered Deck From Tag — Enhanced Edition has been updated to {CURRENT_VERSION}.</b><br><br>
+
+    <b>New in this version:</b><br>
+    • Alt+Click on a tag to instantly create a filtered deck<br>
+    • Optional CAPS parent tag prefix in deck names (PARENT – Child)<br>
+    • Global search suffix support (e.g. append <code>(is:due OR is:new)</code>)<br><br>
+
+    You can adjust these in the add-on config.<br>
+    See the add-on page for details about new features.<br><br>
+
+    <a href="https://ankiweb.net/shared/info/394377528">https://ankiweb.net/shared/info/394377528</a>
+    """
+
+    # Modal dialog with an OK button
+    showText(msg, type="html")
+
+    # Remember we've shown the message for this version
+    cfg["lastSeenVersion"] = CURRENT_VERSION
+    mw.addonManager.writeConfig(__name__, cfg)
+
+
+
+# Run once per version
 show_update_notice()
+
+
+
+# ---------- Monkey-patch SidebarTreeView to auto-install Alt+Click ----------
+
+# Every time a SidebarTreeView is created (i.e. Browser sidebar),
+# we automatically install the quick-create event filter.
+_original_sidebar_init = SidebarTreeView.__init__
+
+
+def _fdft_sidebar_init(self, *args, **kwargs):
+    _original_sidebar_init(self, *args, **kwargs)
+    _ensure_quick_create(self)
+
+
+SidebarTreeView.__init__ = _fdft_sidebar_init
 
 
 # Append our option to the context menu
